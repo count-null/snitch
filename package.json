@@ -1,0 +1,24 @@
+{
+  "name": "snitch",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.0.0",
+    "chalk-animation": "^1.6.0",
+    "figlet": "^1.5.2",
+    "gradient-string": "^1.2.0",
+    "inquirer": "^8.2.0",
+    "ln-service": "^53.6.0",
+    "nanospinner": "^1.0.0"
+  },
+  "devDependencies": {
+    "prettier": "2.5.1"
+  }
+}
