@@ -1,33 +1,34 @@
-#!/usr/bin/env node
-
-import fs from "fs";
+import { getCommands } from "./params.js";
+import { initConfig, Config } from "./config.js";
+import Yargs from "yargs";
 import lnService from "ln-service";
-import { sleep, log } from "./helpers.js";
-import { hello, askConnect, menuLoop, loggedInAs } from "./menu.js";
+import { menuLoop } from "./menu.js";
 
-const CONFIG_PATH = "./.snitch.json";
+const num_args = process.argv.length - 2;
 const VERSION = "0.0.1-alpha";
+const CONFIG = new Config(null, null);
+await initConfig(CONFIG);
 
-async function startup(menuKey) {
-  fs.readFile(CONFIG_PATH, "utf8", async (err, data) => {
-    if (err) {
-      log("Creating new config...");
-      const conn = await askConnect();
-      await writeConfig({ conn });
-      await sleep();
-      return startup("main_menu");
-    } else {
-      const CONFIG = JSON.parse(data);
-      const { lnd } = lnService.authenticatedLndGrpc({
-        cert: CONFIG.conn.cert,
-        macaroon: CONFIG.conn.macaroon,
-        socket: CONFIG.conn.socket,
-      });
-      await loggedInAs(lnd);
-      await menuLoop(menuKey, lnd, CONFIG, startup);
+const { cert, macaroon, socket } = CONFIG.agents.find(
+  (a) => a.name === CONFIG.default_agent
+);
+export const { lnd } = lnService.authenticatedLndGrpc({
+  cert,
+  macaroon,
+  socket,
+});
+
+if (num_args > 0) {
+  const argv = Yargs(process.argv.slice(2));
+  const commands = await getCommands();
+  for (const command in commands) {
+    if (Object.hasOwnProperty.call(commands, command)) {
+      const element = commands[command];
+      argv.command(element);
     }
-  });
-}
-await hello(VERSION);
+  }
+  argv.demandCommand().help().wrap(72).argv;
 
-await startup("main_menu");
+  console.log(argv._);
+}
+await menuLoop(lnd, VERSION);
