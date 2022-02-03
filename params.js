@@ -1,52 +1,60 @@
 import inquirer from "inquirer";
 
-const paramConfig = {
-  add_agent: {
-    category: "agents",
-    exec: {
-      command: "agent <key> [value]",
-      aliases: ["a", "agt"],
-      desc: "Manage agents",
-      builder: (yargs) => yargs.default("value", "true"),
+export const paramConfig = {
+  agent: {
+    _args: {
+      command: "agent <command>",
+      desc: "Manage RPC hosts",
+      builder: (yargs) => null,
       handler: (argv) => {
-        console.log(`${argv.key} and ${argv.value}`);
+        console.log("HANDLING AGENT COMMANDS");
       },
     },
-    prompt: [
-      {
-        name: "cert",
-        type: "input",
-        message: "Enter cert: ",
+    _choices: { c: ["create", "list", "show", "rm"] },
+    agent_add: {
+      options: {
+        name: {
+          alias: "n",
+          describe: "name this connection",
+          prompt: "Enter new connection name: ",
+          type: "input",
+          demandOption: true,
+        },
+        socket: {
+          alias: "s",
+          describe: "provide a socket e.x. localhost:10001",
+          prompt: "Enter socket: ",
+          type: "input",
+          demandOption: true,
+        },
+        cert: {
+          alias: "c",
+          describe: "provide a base 64 lnd cert",
+          prompt: "Enter cert: ",
+          type: "input",
+          demandOption: true,
+        },
+        macaroon: {
+          alias: "m",
+          describe: "provide a base 64 lnd macaroon",
+          prompt: "Enter macaroon: ",
+          type: "input",
+          demandOption: true,
+        },
       },
-      {
-        name: "macaroon",
-        type: "input",
-        message: "Enter macroon: ",
-      },
-      {
-        name: "socket",
-        type: "input",
-        message: "Enter socket: ",
-      },
-      {
-        name: "name",
-        type: "input",
-        message: "Name this agent: ",
-      },
-    ],
+    },
   },
 };
 
-export async function getCommands() {
-  let cmds = [];
-  for (const cmd_key of Object.keys(paramConfig)) {
-    cmds.push(paramConfig[cmd_key].exec);
-  }
-  return cmds;
-}
-
-export async function getParams(command_key) {
-  const answers = await inquirer.prompt(paramConfig[command_key].prompt);
-  console.log(answers);
+export async function inquireParams(command_key) {
+  const [command, key] = command_key.split("_");
+  const { options } = paramConfig[command][command_key];
+  const answers = await inquirer.prompt(
+    Object.keys(options).map((c) => ({
+      name: c,
+      type: options[c].type,
+      message: options[c].prompt,
+    }))
+  );
   return answers;
 }

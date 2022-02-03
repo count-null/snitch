@@ -1,5 +1,5 @@
 import fs from "fs";
-import { getParams } from "./params.js";
+import { inquireParams } from "./params.js";
 
 const CONFIG_PATH = ".snitch.json";
 
@@ -8,6 +8,12 @@ export class Config {
     this.agents = agents;
     this.default_agent = default_agent;
   }
+}
+
+export async function writeConfig(CONFIG) {
+  fs.writeFile(CONFIG_PATH, JSON.stringify(CONFIG), function (err) {
+    if (err) return console.log(`Error writing file: ${err}`);
+  });
 }
 
 export async function initConfig(CONFIG) {
@@ -19,7 +25,7 @@ export async function initConfig(CONFIG) {
     CONFIG.agents = config.agents;
   } catch (err) {
     // config missing
-    const answers = await getParams("add_agent");
+    const answers = await inquireParams("agent_add");
     CONFIG.default_agent = answers.name;
     CONFIG.agents = [
       {
