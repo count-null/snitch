@@ -1,47 +1,50 @@
 import fs from "fs";
-import { inquireParams } from "./params.js";
+import inquirer from "inquirer";
+import NodeCommand from "./node/index.js";
 
 const CONFIG_PATH = ".snitch.json";
 
-export class Config {
-  constructor(agents, default_agent) {
-    this.agents = agents;
-    this.default_agent = default_agent;
+export default class Config {
+  constructor(nodes, default_node) {
+    // use async init method to create instances of config
+    this.nodes = nodes;
+    this.default_node = default_node;
   }
-}
 
-export async function writeConfig(CONFIG) {
-  fs.writeFile(CONFIG_PATH, JSON.stringify(CONFIG), function (err) {
-    if (err) return console.log(`Error writing file: ${err}`);
-  });
-}
+  async writeConfig() {
+    fs.writeFile(
+      CONFIG_PATH,
+      JSON.stringify({
+        nodes: this.nodes,
+        default_node: this.default_node,
+      }),
+      function (err) {
+        if (err) return console.log(`Error writing file: ${err}`);
+      }
+    );
+  }
 
-export async function initConfig(CONFIG) {
-  try {
-    // config exists
-    const data = fs.readFileSync(CONFIG_PATH);
-    const config = JSON.parse(data);
-    CONFIG.default_agent = config.default_agent;
-    CONFIG.agents = config.agents;
-  } catch (err) {
-    // config missing
-    const answers = await inquireParams("agent_add");
-    CONFIG.default_agent = answers.name;
-    CONFIG.agents = [
-      {
-        name: answers.name,
-        cert: answers.cert,
-        macaroon: answers.macaroon,
-        socket: answers.socket,
-      },
-    ];
-    const content = JSON.stringify(CONFIG);
+  static async init() {
     try {
-      fs.writeFileSync(CONFIG_PATH, content);
-      // it worked
+      // config exists
+      const config = JSON.parse(fs.readFileSync(CONFIG_PATH));
+      return new Config(config.nodes, config.default_node);
     } catch (err) {
-      // can't write to config file
-      console.error(err);
+      // config missing
+      const answers = await inquirer.prompt(NodeCommand.prompt.add);
+      const config = new Config(
+        [
+          {
+            name: answers.name,
+            cert: answers.cert,
+            macaroon: answers.macaroon,
+            socket: answers.socket,
+          },
+        ],
+        answers.name
+      );
+      config.writeConfig();
+      return config;
     }
   }
 }

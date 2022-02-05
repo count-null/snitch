@@ -1,29 +1,81 @@
-import lnService from "ln-service";
-import chalk from "chalk";
+import Lnd from "./lnd.js";
+import NodeCommand from "./node/index.js";
+import inquirer from "inquirer";
+import Command from "./command.js";
+const { keys } = Object;
 
-export async function loggedInAs(lnd) {
-  const wallet = await lnService.getWalletInfo({ lnd });
-  console.log(
-    `${chalk.hex(wallet.color).bold(wallet.alias)} ${wallet.public_key}`
-  );
-  console.log(
-    `Channels: ${wallet.active_channels_count} Peers: ${wallet.peers_count}`
-  );
-}
+export default class Menu {
+  constructor(config, version) {
+    this.config = config;
+    this.version = version;
+    this.conn = Lnd.init(config);
+    this.commands = { nodes: NodeCommand };
+  }
 
-export async function menuLoop(lnd, VERSION) {
-  console.log(
-    `
-  
-    ,e,   d8        "   888           888                                
-    d88~\\ 888-~88e  "  _d88__  e88~~\\ 888-~88e  e88~~8e  888-~\\ 
-   C888   888  888 888  888   d888    888  888 d888  88b 888    
-    Y88b  888  888 888  888   8888    888  888 8888__888 888    
-     888D 888  888 888  888   Y888    888  888 Y888    , 888    
-   \\_88P  888  888 888  "88_/  "88__/ 888  888  "88___/  888
-  
-                                                    ${VERSION}
-    `
-  );
-  await loggedInAs(lnd);
+  splash() {
+    console.log(
+      `
+              
+                ,e,   d8        "   888           888                                
+                d88~\\ 888-~88e  "  _d88__  e88~~\\ 888-~88e  e88~~8e  888-~\\ 
+               C888   888  888 888  888   d888    888  888 d888  88b 888    
+                Y88b  888  888 888  888   8888    888  888 8888__888 888    
+                 888D 888  888 888  888   Y888    888  888 Y888    , 888    
+               \\_88P  888  888 888  "88_/  "88__/ 888  888  "88___/  888
+              
+                                                                ${this.version}
+                `
+    );
+  }
+
+  async mainMenu() {
+    const title = "MAIN MENU";
+    const selection = await inquirer.prompt([
+      {
+        name: title,
+        type: "list",
+        choices: keys(this.commands),
+      },
+    ]);
+    return selection[title];
+  }
+
+  async commandMenu(command) {
+    const title = `${command.toUpperCase()} MENU`;
+    const selection = await inquirer.prompt([
+      {
+        name: title,
+        type: "list",
+        choices: keys(this.commands[command].args(this.config)),
+      },
+    ]);
+    return selection[title];
+  }
+
+  async menuLoop() {
+    this.splash();
+    await this.conn.testConn();
+    let stack = [];
+    if (stack.length === 0) {
+      stack.push(await this.mainMenu());
+    }
+    if (stack.length === 1) {
+      const selection = await this.commandMenu(stack[0]);
+      if (selection === "back") {
+        stack.pop();
+      } else {
+        stack.push(selection);
+      }
+    }
+    if (stack.length === 2) {
+      const selection = await inquirer.prompt(
+        this.commands[stack[0]].args(this.config)[stack[1]].prompt
+      );
+      Command.menuHandler(
+        stack[1],
+        selection,
+        new this.commands[stack[0]](this.config)
+      );
+    }
+  }
 }
