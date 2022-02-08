@@ -55,14 +55,14 @@ export default class GraphCommand {
     if (this.snapshot) {
       // show synopsis nodes/channels, btc locked
       const G = GraphCommand.load(this.snapshot);
-      let satCap = 0;
+      let btcCap = 0;
       G.channels.forEach((c) => {
-        satCap = satCap + c.capacity;
+        btcCap = btcCap + c.capacity / 100000000;
       });
       const summary = {
         nodes: G.nodes.length,
         channels: G.channels.length,
-        capacity: satCap / 100000000,
+        capacity: btcCap,
         date: new Date(1000 * Number(this.snapshot.split("-")[1])),
       };
       console.log(summary);
