@@ -47,6 +47,10 @@ export default class GraphCommand {
     fs.unlinkSync(`${GRAPH_DIR}/${this.snapshot}.json`);
   }
 
+  _cat() {
+    console.log(GraphCommand.load(this.snapshot));
+  }
+
   _ls() {
     if (this.snapshot) {
       // show synopsis nodes/channels, btc locked
