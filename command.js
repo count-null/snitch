@@ -42,7 +42,7 @@ export default class Command {
     }
     // run the method for the cli argument
     if (exec) {
-      CmdInstance[args.action]();
+      CmdInstance[`_${args.action}`]();
     }
   }
 
@@ -52,6 +52,6 @@ export default class Command {
       CmdInstance[attr] = selection[attr];
     }
     // run the method for the menu action
-    CmdInstance[action]();
+    CmdInstance[`_${action}`]();
   }
 }

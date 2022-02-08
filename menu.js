@@ -2,6 +2,7 @@ import Lnd from "./lnd.js";
 import NodeCommand from "./node/index.js";
 import inquirer from "inquirer";
 import Command from "./command.js";
+import GraphCommand from "./graph/index.js";
 const { keys } = Object;
 
 export default class Menu {
@@ -9,7 +10,7 @@ export default class Menu {
     this.config = config;
     this.version = version;
     this.conn = Lnd.init(config);
-    this.commands = { nodes: NodeCommand };
+    this.commands = { nodes: NodeCommand, graphs: GraphCommand };
   }
 
   splash() {
@@ -30,11 +31,12 @@ export default class Menu {
 
   async mainMenu() {
     const title = "MAIN MENU";
+    const choices = [...keys(this.commands), "exit"];
     const selection = await inquirer.prompt([
       {
         name: title,
         type: "list",
-        choices: keys(this.commands),
+        choices,
       },
     ]);
     return selection[title];
@@ -57,7 +59,11 @@ export default class Menu {
     await this.conn.testConn();
     let stack = [];
     if (stack.length === 0) {
-      stack.push(await this.mainMenu());
+      const selection = await this.mainMenu();
+      if (selection === "exit") {
+        process.exit(1);
+      }
+      stack.push(selection);
     }
     if (stack.length === 1) {
       const selection = await this.commandMenu(stack[0]);

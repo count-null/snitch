@@ -1,13 +1,23 @@
-## Command usage
+# Snitch LN
 
-### agent
+## CLI suite for multi-agent network analysis
 
-An agent is an LND connection profile.
+Manage multiple node connections and conduct analysis of the Lightning Network.
 
-snitch node list <agent>
-snitch node add -n Bob -s localhost:10001 -c <Base64cert> -m <Base64macroon>
-snitch node rm Bob
+## Usage
 
-snitch node become Bob
+`npm install` install packages
 
-### graph
+`node .` run the command with no arguments to start menu
+
+`node . --help`
+
+`node . <command> [arg] --option value`
+
+### nodes
+
+Tools for managing multiple LND node connections.
+
+### graphs
+
+Tools for managing multiple network snapshots for local analysis.

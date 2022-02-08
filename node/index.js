@@ -1,7 +1,5 @@
 import Lnd from "../lnd.js";
 
-const { keys } = Object;
-
 export default class NodeCommand {
   constructor(config) {
     // create class with an instance of Config.init()
@@ -14,7 +12,7 @@ export default class NodeCommand {
     this.socket;
   }
 
-  add() {
+  _add() {
     const { name, cert, macaroon, socket } = this;
     this.config.nodes = [
       { name, cert, macaroon, socket },
@@ -23,7 +21,7 @@ export default class NodeCommand {
     this.config.writeConfig();
   }
 
-  rm() {
+  _rm() {
     try {
       this.config.nodes = [
         ...this.config.nodes.filter((n) => n.name !== this.name),
@@ -34,7 +32,7 @@ export default class NodeCommand {
     }
   }
 
-  ls() {
+  _ls() {
     if (this.name) {
       try {
         const target = this.config.nodes.find((n) => n.name === this.name);
@@ -46,7 +44,8 @@ export default class NodeCommand {
       console.log(this.config.nodes);
     }
   }
-  become() {
+
+  _become() {
     this.config.default_node = this.name;
     Lnd.init(this.config).testConn();
     this.config.writeConfig();
