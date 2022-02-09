@@ -2,6 +2,7 @@ import Lnd from "../lnd.js";
 import { getNetworkGraph } from "ln-service";
 import fs from "fs";
 import path from "path";
+const { keys } = Object;
 
 const GRAPH_DIR = "./.graphs";
 
@@ -19,6 +20,29 @@ export default class GraphCommand {
   static load(name) {
     // load the JSON from file using default_graph
     return JSON.parse(fs.readFileSync(`${GRAPH_DIR}/${name}.json`));
+  }
+
+  static pubkeyParse(snapshot) {
+    // parse the default graph into a more effieicent struct
+    // {
+    //  pubkey: [channels]
+    // }
+    const G = GraphCommand.load(snapshot);
+    let newG = {};
+    const { nodes, channels } = G;
+    for (const node of nodes) {
+      newG[node.pub_key] = node;
+    }
+    for (const channel of channels) {
+      for (const pub of ["node1_pub", "node2_pub"]) {
+        if (keys(newG[channel[pub]]).includes("channels")) {
+          newG[channel[pub]].channels.push(channel);
+        } else {
+          newG[channel[pub]].channels = [channel];
+        }
+      }
+    }
+    return newG;
   }
 
   getName() {
@@ -80,13 +104,6 @@ export default class GraphCommand {
   }
 
   static args(config) {
-    const selectGraphPrompt = [
-      {
-        name: "snapshot",
-        type: "list",
-        choices: GraphCommand.listGraphs().map((s) => s.name),
-      },
-    ];
     return {
       fetch: {
         required: { options: ["node"] },
@@ -113,3 +130,11 @@ export default class GraphCommand {
     };
   }
 }
+
+export const selectGraphPrompt = [
+  {
+    name: "snapshot",
+    type: "list",
+    choices: GraphCommand.listGraphs().map((s) => s.name),
+  },
+];

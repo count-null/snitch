@@ -3,6 +3,7 @@ import NodeCommand from "./node/index.js";
 import inquirer from "inquirer";
 import Command from "./command.js";
 import GraphCommand from "./graph/index.js";
+import CycleCommand from "./cycle/index.js";
 const { keys } = Object;
 
 export default class Menu {
@@ -10,7 +11,11 @@ export default class Menu {
     this.config = config;
     this.version = version;
     this.conn = Lnd.init(config);
-    this.commands = { nodes: NodeCommand, graphs: GraphCommand };
+    this.commands = {
+      nodes: NodeCommand,
+      graphs: GraphCommand,
+      cycles: CycleCommand,
+    };
   }
 
   splash() {

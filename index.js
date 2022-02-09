@@ -4,6 +4,7 @@ import NodeCommand from "./node/index.js";
 import Command from "./command.js";
 import prog from "caporal";
 import GraphCommand from "./graph/index.js";
+import CycleCommand from "./cycle/index.js";
 const { keys } = Object;
 
 const VERSION = "0.0.1-alpha";
@@ -37,6 +38,20 @@ prog
   .option("--n --node <node_name>", "node name to fetch graph from")
   .action((args, options, logger) => {
     Command.cliHandler(args, options, logger, new GraphCommand(CONFIG));
+  })
+
+  // CYCLE - explore cycles in the graph
+  .command("cycle", "Explore cycles in the graph")
+  .argument("<action>", "action to perform", keys(CycleCommand.args(CONFIG)))
+  .argument("[snapshot]", "the name of the snapshot e.x. alice-1644281970")
+  .help(`Actions: ${keys(CycleCommand.args(CONFIG)).join(", ")}`)
+  .option("--n --num <int>", "number of edges in cycle e.x. triangle = 3")
+  .option("--p --pubkey <string>", "pubkey of start position in the cycle")
+  .option("--min-cap <num_sats>", "minimum sats for every channel in the cycle")
+  .option("--max-cap <num_sats>", "maximum sats for every channel in the cycle")
+  .option("--min-cycles <int>", "minimum number of cycles to return")
+  .action((args, options, logger) => {
+    Command.cliHandler(args, options, logger, new CycleCommand(CONFIG));
   });
 
 prog.parse(process.argv);
